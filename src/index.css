@@ -104,8 +104,8 @@ footer, div.flex > div.boxed {
 }
 
 body > div > div > div {
-  flex: 1 0 15rem;
-  min-width: 15rem;
+  flex: 1 0 20rem;
+  min-width: 20rem;
   margin: 0;
   padding: 0;
 }

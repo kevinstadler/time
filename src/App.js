@@ -44,6 +44,9 @@ const msToFlorence = (ms, resolution, trailingZeroes) => {
 //  return msToFlorence(date.getTime() - 1e3 * 60 * date.getTimezoneOffset(), resolution, trailingZeroes);
 //}
 
+const x = new Date().toString();
+const localTz = x.substring(x.indexOf('(') + 1, x.length-1);
+
 // http://www.steffen-eitner.homepage.t-online.de/tempilo/tempkons.htm
 function App() {
   const [now, setNow] = useState(Date.now());
@@ -65,7 +68,6 @@ function App() {
   // * timezone selector
 
   const [fraction, setFraction] = useState(0.5);
-  // TODO look up Intl.DateTimeFormat().resolvedOptions().timeZone
   const [tz, setTz] = useState(0);
 
   const selectTz = (e) => {
@@ -76,8 +78,9 @@ function App() {
   // https://gist.github.com/alyssaq/f1f0ec50e79f1c089554d0de855dd09c
   useEffect(() => {
     fetch('tz.csv').then(r => r.text()).then(t => {
-      setTzOptions(t.split("\n").map(l => l.split(',')));
-      setTz(63); // UTC
+      const opts = t.split("\n").map(l => l.split(','));
+      setTzOptions(opts);
+      setTz(opts.findIndex((el) => el[1] === localTz) || 63); // UTC
     })
   }, []);
 
@@ -102,8 +105,7 @@ function App() {
     if (isNaN(v)) {
       return;
     }
-    // TODO take tz into account
-    setFraction(addTZoffset((e.target.value.length === 2 ? 16*v : v) / 256, 1));
+    setFraction(addTZoffset((e.target.value.length === 2 ? 16*v : v) / 256, 1, -1));
   };
 
   const dragHex = (e) => {
