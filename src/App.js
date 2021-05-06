@@ -13,8 +13,6 @@ const fractionToFlorence = (fractionOfDay, resolution = 4, trailingZeroes = true
 }
 
 const toHHmm = (fraction) => {
-  // TODO why is this constantly rerendered
-//  console.log(fraction);
   return Math.floor(24 * fraction).toString().padStart(2, '0') + ':' + (Math.round(24 * 60 * fraction) % 60).toString().padStart(2, '0');
 };
 
@@ -47,8 +45,7 @@ const msToFlorence = (ms, resolution, trailingZeroes) => {
 const x = new Date().toString();
 const localTz = x.substring(x.indexOf('(') + 1, x.length-1);
 
-// http://www.steffen-eitner.homepage.t-online.de/tempilo/tempkons.htm
-function App() {
+const Clock = () => {
   const [now, setNow] = useState(Date.now());
   const [florence, setFlorence] = useState(msToFlorence(now));
   useEffect(() => {
@@ -58,6 +55,22 @@ function App() {
     }, 300);
   }, [now]);
 
+  // https://www.npmjs.com/package/react-tooltip
+  const explanations = ['hours, minutes and seconds are but arbitrary subdivisions of what humanity really care about: the earth day. if we take the length of a full day to be "1", then hours are really<br>just fractional subdivisions, which should therefore be marked *after* the comma point.', 'each day is broken into 16 hexadecimal hours.<br>1 hexadecimal hour is equivalent to 1.5 SI hours', 'each hexadecimal hour is broken into 16 hexadecimal maximes.<br>1 day therefore contains 256 hexadecimal maximes.<br>1 hexadecimal maxime is equivalent to ~5 1/2 minutes in SI units.', 'each hexadecimal maxime is broken into 16 hexadecimal minutes.<br>1 day therefore contains 4096 hexadecimal minutes.<br>1 hexadecimal minute is equivalent to ~21.09 SI seconds.', 'each hexadecimal minute is broken into 16 hexadecimal seconds.<br>1 day therefore contains 65536 hexadecimal seconds.<br><br>1 hexadecimal second is equivalent to ~1.318 SI seconds.'];
+  const digits = explanations.map((ex, i) => <span className="time" key={i} data-tip={ex}>{florence.charAt(i)}</span>);
+  return <div className="boxed" style={{ flexBasis: 'auto', width: '-webkit-fill-available', fontSize: '160%', textAlign: 'center' }}>
+    <div>it is currently</div>
+    <div style={{ fontSize: '400%', fontWeight: 'bold', fontFamily: 'monospace', margin: '1rem 0' }}>{digits}</div>
+    <div>Universal Florence Hexadecimal Mean Time</div>
+    <ReactTooltip style={{ width: "100px",
+"word-break": "break-all",
+"overflow-wrap": "break-word",
+display: "block"}} multiline={true} />
+  </div>;
+};
+
+// http://www.steffen-eitner.homepage.t-online.de/tempilo/tempkons.htm
+const App = () => {
   // ground truth = FRACTION of day (according to time input)
   // hex = based on fraction + tz
 
@@ -121,20 +134,9 @@ function App() {
     setFraction(parseInt(e.target.value) / 288);
   }
 
-  // https://www.npmjs.com/package/react-tooltip
-  const explanations = ['for the average human, hours and minutes are primarily interesting as subdivisions<br>of an earth day. if we take the length of a full day to be "1", then hours are really<br>just fractional subdivisions, which should therefore be marked *after* the comma point.', 'each day is broken into 16 hexadecimal hours.<br>1 hexadecimal hour is equivalent to 1.5 SI hours', 'each hexadecimal hour is broken into 16 hexadecimal maximes.<br>1 day therefore contains 256 hexadecimal maximes.<br>1 hexadecimal maxime is equivalent to 5 minutes and 37.5 seconds in SI units.', 'each hexadecimal maxime is broken into 16 hexadecimal minutes.<br>1 day therefore contains 4096 hexadecimal minutes.<br>1 hexadecimal minute is equivalent to ~21.09 SI seconds.', 'each hexadecimal minute is broken into 16 hexadecimal seconds.<br>1 day therefore contains 65536 hexadecimal seconds.<br><br>1 hexadecimal second is equivalent to ~1.318 SI seconds.'];
-  const digits = explanations.map((ex, i) => <span className="time" key={i} data-tip={ex}>{florence.charAt(i)}</span>);
   return (<>
     <div className="flex">
-      <div className="boxed" style={{ flexBasis: 'auto', width: '-webkit-fill-available', fontSize: '160%', textAlign: 'center' }}>
-        <div>it is currently</div>
-        <div style={{ fontSize: '400%', fontWeight: 'bold', fontFamily: 'monospace', margin: '1rem 0' }}>{digits}</div>
-        <div>Florence Hexadecimal Mean Time</div>
-        <ReactTooltip style={{ width: "100px",
-    "word-break": "break-all",
-    "overflow-wrap": "break-word",
-    display: "block"}} multiline={true} />
-      </div>
+      <Clock />
 
       <div className="boxed">
         <div>
@@ -147,8 +149,8 @@ function App() {
         </div>
       </div>
 
-      <div className="boxed flex" style={{ flexDirection: 'column', alignItems: 'center' }}>
-        <h2>convert to/from Florence Mean Time</h2>
+      <div className="boxed flex conversion">
+        <h2>convert to/from your local time</h2>
         <div style={{ width: '100%' }}>
           <input type="text" value={fractionToFlorence(addTZoffset(fraction), 2)} onChange={typeHex} max-length="3" style={{ width: '4ex', position: 'relative', left: 'calc(' + 100*addTZoffset(fraction)%100 + '% - 10px)' }}/>
         </div>
