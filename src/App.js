@@ -43,7 +43,10 @@ const msToFlorence = (ms, resolution, trailingZeroes) => {
 //}
 
 const x = new Date().toString();
-const localTz = x.substring(x.indexOf('(') + 1, x.length-1);
+const localTzOffsetPos = x.indexOf('GMT') + 3;
+// sign plus non-zero-prefixed hour
+const localTzHourOffset = x[localTzOffsetPos] + parseInt(x.substring(localTzOffsetPos + 1, localTzOffsetPos+3));
+const localTzName = x.substring(x.indexOf('(') + 1, x.length-1);
 
 const Clock = () => {
   const [now, setNow] = useState(Date.now());
@@ -87,13 +90,18 @@ const App = () => {
     setTz(e.target.value);
   };
 
-  const [tzOptions, setTzOptions] = useState([['', 'Universal Coordinated Time', '' ]]);
+  const [tzOptions, setTzOptions] = useState([[ '', 'Universal Coordinated Time', '' ]]);
   // https://gist.github.com/alyssaq/f1f0ec50e79f1c089554d0de855dd09c
   useEffect(() => {
     fetch('tz.csv').then(r => r.text()).then(t => {
       const opts = t.split("\n").map(l => l.split(','));
       setTzOptions(opts);
-      setTz(opts.findIndex((el) => el[1] === localTz) || 63); // UTC
+      var idx = opts.findIndex((el) => el[1] === localTzName);
+      if (idx === -1) {
+        // Safari does abbreviations not full string, which can be ambiguous
+        idx = opts.findIndex((el) => el[0] === localTzName && el[2].startsWith(localTzHourOffset));
+      }
+      setTz(idx === -1 ? 63 : idx); // UTC
     })
   }, []);
 
